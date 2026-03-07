@@ -40,15 +40,18 @@ const DEFAULT_DB = {
   nextShowFeedback: []       // { id, deviceId, feedbackText, anything, ts }
 };
 
-function loadDB() {
+// In-memory DB — eliminates race conditions from concurrent file reads/writes
+let db = (() => {
   try { if (fs.existsSync(DB_FILE)) return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
   catch (e) { console.error('DB read error', e); }
   return JSON.parse(JSON.stringify(DEFAULT_DB));
-}
-function saveDB(db) { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
+})();
+
+function loadDB() { return db; }
+function saveDB(d) { db = d; fs.writeFileSync(DB_FILE, JSON.stringify(d, null, 2)); }
 function loadPerformances() { return JSON.parse(fs.readFileSync(path.join(__dirname, 'performances.json'), 'utf8')); }
 
-if (!fs.existsSync(DB_FILE)) saveDB(DEFAULT_DB);
+if (!fs.existsSync(DB_FILE)) saveDB(db);
 
 // ======================== MULTER ========================
 const storage = multer.diskStorage({
@@ -225,11 +228,16 @@ app.post('/api/admin/login', (req, res) => {
 app.post('/api/admin/phase', adminAuth, (req, res) => {
   const { phase, currentPerfIndex, feedbackOpen, votingOpen } = req.body;
   const db = loadDB();
-  if (phase !== undefined)            db.state.phase = phase;
+  if (phase !== undefined) {
+    db.state.phase = phase;
+    // Auto-reset conflicting flags when switching phases
+    if (phase === 'waiting')    { db.state.votingOpen = false; db.state.feedbackOpen = false; }
+    if (phase === 'performing') { db.state.votingOpen = false; }
+    if (phase === 'voting')     { db.state.feedbackOpen = false; }
+  }
   if (currentPerfIndex !== undefined) {
     const perfs = loadPerformances();
     const sorted = getChronologicallySorted(perfs);
-    // Ensure index is within bounds
     db.state.currentPerfIndex = Math.max(0, Math.min(currentPerfIndex, sorted.length - 1));
   }
   if (feedbackOpen !== undefined)     db.state.feedbackOpen = feedbackOpen;

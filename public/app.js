@@ -103,21 +103,29 @@ let _es = null;
 function connectSSE() {
   if (_es) { _es.close(); _es = null; }
   _es = new EventSource('/api/events');
-  _es.addEventListener('stateUpdate', async e => {
+  _es.addEventListener('stateUpdate', e => {
+    const prev = appState;
     appState = JSON.parse(e.data);
-    try { await Promise.all([loadPerfs(), loadSups()]); } catch(err) { console.warn('SSE resync failed', err); }
+    // If voting was closed (reset or phase change), clear local voted flag
+    if (prev && prev.state.votingOpen && !appState.state.votingOpen) {
+      localStorage.removeItem('pcts_voted');
+      feedbackDone = {};
+    }
+    // Render immediately with current data
     render();
     if (isAdmin) refreshAdminPanel();
+    // Then resync performances/superlatives in background
+    Promise.all([loadPerfs(), loadSups()]).then(() => { render(); if (isAdmin) refreshAdminPanel(); }).catch(() => {});
   });
-  _es.addEventListener('mediaUpdate', async e => {
+  _es.addEventListener('mediaUpdate', e => {
     const m = JSON.parse(e.data);
     if (!m.deleted) {
       const p = performances.find(x => x.id === m.performanceId);
       if (p) { p.media = p.media || []; p.media.push(m); }
     }
-    try { await loadPerfs(); } catch(err) {}
     renderMedia();
     if (isAdmin) refreshAdminPanel();
+    loadPerfs().then(() => { renderMedia(); if (isAdmin) refreshAdminPanel(); }).catch(() => {});
   });
   _es.onerror = () => { _es.close(); _es = null; setTimeout(connectSSE, 2000); };
 }

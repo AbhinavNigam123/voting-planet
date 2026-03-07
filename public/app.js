@@ -96,12 +96,23 @@ async function enterApp() {
   await Promise.all([loadState(), loadPerfs(), loadSups()]);
   connectSSE();
   render();
-  // Re-sync when user returns to tab (phone sleep, app switch, etc.)
+  // Re-sync when user returns to tab
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'visible') {
-      try { await loadState(); render(); } catch(e) {}
+      try { await loadState(); await loadPerfs(); render(); } catch(e) {}
     }
   });
+  // Polling fallback — catches any missed SSE events
+  setInterval(async () => {
+    try {
+      const fresh = await api('/api/state');
+      if (fresh && fresh.v !== undefined && (!appState || fresh.v !== appState.v)) {
+        appState = fresh;
+        await loadPerfs();
+        render();
+      }
+    } catch(e) {}
+  }, 5000);
 }
 
 // ─── SSE ────────────────────────────────────────────────
@@ -112,16 +123,15 @@ function connectSSE() {
   _es.addEventListener('stateUpdate', e => {
     const prev = appState;
     appState = JSON.parse(e.data);
-    // If voting was closed (reset or phase change), clear local voted flag
+    // If voting closed, clear voted flag so user can re-vote after reset
     if (prev && prev.state.votingOpen && !appState.state.votingOpen) {
       localStorage.removeItem('pcts_voted');
       feedbackDone = {};
     }
-    // Render immediately with current data
     render();
     if (isAdmin) refreshAdminPanel();
-    // Then resync performances/superlatives in background
-    Promise.all([loadPerfs(), loadSups()]).then(() => { render(); if (isAdmin) refreshAdminPanel(); }).catch(() => {});
+    // Resync data in background
+    loadPerfs().then(() => { render(); if (isAdmin) refreshAdminPanel(); }).catch(() => {});
   });
   _es.addEventListener('reset', () => {
     // Clear ALL local state; non-admins must re-login

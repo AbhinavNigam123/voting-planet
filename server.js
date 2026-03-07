@@ -60,8 +60,9 @@ let db = (() => {
   return JSON.parse(JSON.stringify(DEFAULT_DB));
 })();
 
+let stateVersion = 0;
 function loadDB() { return db; }
-function saveDB(d) { db = d; fs.writeFileSync(DB_FILE, JSON.stringify(d, null, 2)); }
+function saveDB(d) { db = d; stateVersion++; fs.writeFileSync(DB_FILE, JSON.stringify(d, null, 2)); }
 function loadPerformances() { return JSON.parse(fs.readFileSync(path.join(__dirname, 'performances.json'), 'utf8')); }
 
 if (!fs.existsSync(DB_FILE)) saveDB(db);
@@ -123,7 +124,8 @@ function buildPublicState(db) {
     state: { ...db.state, currentPerfIndex: safeIndex },
     currentPerformance: cur,
     currentMedia: cur ? db.media.filter(m => m.performanceId === cur.id).map(m => ({ ...m, url: m.url || `/uploads/${m.filename}` })) : [],
-    totalPerformances: sorted.length
+    totalPerformances: sorted.length,
+    v: stateVersion
   };
 }
 
@@ -276,7 +278,7 @@ app.post('/api/admin/upload', adminAuth, upload.single('media'), async (req, res
         Body: req.file.buffer,
         ContentType: req.file.mimetype
       }));
-      fileUrl = `${process.env.AWS_ENDPOINT_URL_S3}/${process.env.BUCKET_NAME}/${filename}`;
+      fileUrl = `https://${process.env.BUCKET_NAME}.fly.storage.tigris.dev/${filename}`;
     } catch (e) {
       console.error('S3 upload error', e);
       return res.status(500).json({ error: 'Upload failed.' });

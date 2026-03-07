@@ -3,12 +3,25 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ======================== CONFIG ========================
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'panthershow2026';
+
+// ======================== TIGRIS S3 ========================
+const USE_S3 = !!(process.env.AWS_ENDPOINT_URL_S3 && process.env.BUCKET_NAME);
+let s3 = null;
+if (USE_S3) {
+  s3 = new S3Client({
+    region: process.env.AWS_REGION || 'auto',
+    endpoint: process.env.AWS_ENDPOINT_URL_S3,
+    credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY }
+  });
+  console.log('✓ Tigris S3 enabled, bucket:', process.env.BUCKET_NAME);
+}
 
 // ======================== MIDDLEWARE ========================
 app.use(express.json());
@@ -54,11 +67,10 @@ function loadPerformances() { return JSON.parse(fs.readFileSync(path.join(__dirn
 if (!fs.existsSync(DB_FILE)) saveDB(db);
 
 // ======================== MULTER ========================
-const storage = multer.diskStorage({
-  destination: UPLOADS,
-  filename: (_req, file, cb) => cb(null, `${uuidv4()}${path.extname(file.originalname)}`)
-});
-const upload = multer({ storage, limits: { fileSize: 150 * 1024 * 1024 } });
+const multerStorage = USE_S3
+  ? multer.memoryStorage()
+  : multer.diskStorage({ destination: UPLOADS, filename: (_req, file, cb) => cb(null, `${uuidv4()}${path.extname(file.originalname)}`) });
+const upload = multer({ storage: multerStorage, limits: { fileSize: 150 * 1024 * 1024 } });
 
 // ======================== SSE (live updates) ========================
 let sseClients = [];
@@ -110,7 +122,7 @@ function buildPublicState(db) {
   return {
     state: { ...db.state, currentPerfIndex: safeIndex },
     currentPerformance: cur,
-    currentMedia: cur ? db.media.filter(m => m.performanceId === cur.id) : [],
+    currentMedia: cur ? db.media.filter(m => m.performanceId === cur.id).map(m => ({ ...m, url: m.url || `/uploads/${m.filename}` })) : [],
     totalPerformances: sorted.length
   };
 }
@@ -142,7 +154,10 @@ app.get('/api/performances', (_req, res) => {
   const db = loadDB();
   const perfs = loadPerformances().map(p => ({
     ...p,
-    media: (db.media || []).filter(m => m.performanceId === p.id),
+    media: (db.media || []).filter(m => m.performanceId === p.id).map(m => ({
+      ...m,
+      url: m.url || `/uploads/${m.filename}`
+    })),
     tentativeTime: p.tentativeTime || '',
     performerNote: p.performerNote || ''
   }));
@@ -247,15 +262,36 @@ app.post('/api/admin/phase', adminAuth, (req, res) => {
   res.json({ success: true, state: db.state });
 });
 
-app.post('/api/admin/upload', adminAuth, upload.single('media'), (req, res) => {
+app.post('/api/admin/upload', adminAuth, upload.single('media'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
   const db = loadDB();
+  const filename = `${uuidv4()}${path.extname(req.file.originalname)}`;
+  let fileUrl;
+
+  if (USE_S3) {
+    try {
+      await s3.send(new PutObjectCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Key: filename,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype
+      }));
+      fileUrl = `${process.env.AWS_ENDPOINT_URL_S3}/${process.env.BUCKET_NAME}/${filename}`;
+    } catch (e) {
+      console.error('S3 upload error', e);
+      return res.status(500).json({ error: 'Upload failed.' });
+    }
+  } else {
+    fileUrl = `/uploads/${req.file.filename}`;
+  }
+
   const entry = {
     id: uuidv4(),
     performanceId: Number(req.body.performanceId),
-    filename: req.file.filename,
+    filename: USE_S3 ? filename : req.file.filename,
     originalName: req.file.originalname,
     type: req.file.mimetype.startsWith('video') ? 'video' : 'image',
+    url: fileUrl,
     ts: Date.now()
   };
   db.media.push(entry);
@@ -373,12 +409,16 @@ app.delete('/api/admin/performance/:id', adminAuth, (req, res) => {
   res.json({ success: true });
 });
 
-app.delete('/api/admin/media/:id', adminAuth, (req, res) => {
+app.delete('/api/admin/media/:id', adminAuth, async (req, res) => {
   const db = loadDB();
   const media = db.media.find(m => m.id === req.params.id);
   if (!media) return res.status(404).json({ error: 'Media not found.' });
-  const filePath = path.join(UPLOADS, media.filename);
-  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  if (USE_S3) {
+    try { await s3.send(new DeleteObjectCommand({ Bucket: process.env.BUCKET_NAME, Key: media.filename })); } catch(e) { console.error('S3 delete error', e); }
+  } else {
+    const filePath = path.join(UPLOADS, media.filename);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  }
   db.media = db.media.filter(m => m.id !== req.params.id);
   saveDB(db);
   broadcast('mediaUpdate', { deleted: true, id: req.params.id });

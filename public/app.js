@@ -96,6 +96,12 @@ async function enterApp() {
   await Promise.all([loadState(), loadPerfs(), loadSups()]);
   connectSSE();
   render();
+  // Re-sync when user returns to tab (phone sleep, app switch, etc.)
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible') {
+      try { await loadState(); render(); } catch(e) {}
+    }
+  });
 }
 
 // ─── SSE ────────────────────────────────────────────────
@@ -183,12 +189,14 @@ function renderPerformance() {
   else { hide('feedback-section'); hide('fb-done'); }
 }
 
+function mediaUrl(m) { return m.url || `/uploads/${m.filename}`; }
+
 function renderCurrentMedia() {
   const media = appState.currentMedia || [];
   $('perf-media').innerHTML = media.map(m =>
     m.type === 'video'
-      ? `<video src="/uploads/${m.filename}" controls playsinline preload="metadata" style="max-width:100%"></video>`
-      : `<img src="/uploads/${m.filename}" alt="clip" loading="lazy">`
+      ? `<video src="${mediaUrl(m)}" controls playsinline preload="metadata" style="max-width:100%"></video>`
+      : `<img src="${mediaUrl(m)}" alt="clip" loading="lazy">`
   ).join('');
 }
 
@@ -330,10 +338,11 @@ function updateVotingProgress() {
 }
 
 function mediaThumb(m) {
+  const src = mediaUrl(m);
   if (m.type === 'video') {
-    return `<video src="/uploads/${m.filename}" controls playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>`;
+    return `<video src="${src}" controls playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>`;
   }
-  return `<img src="/uploads/${m.filename}" alt="" style="width:100%;height:100%;object-fit:cover">`;
+  return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover">`;
 }
 
 async function submitVotes() {
@@ -352,7 +361,13 @@ async function submitVotes() {
   document.querySelectorAll('.sup-sel').forEach(sel => { if (sel.value) superlativeVotes[sel.dataset.sid] = sel.value; });
 
   const d = await api('/api/vote', { method: 'POST', body: { deviceId, rankings, superlativeVotes } });
-  if (d.error) { $('vote-status').textContent = d.error; $('vote-status').style.color='#dc2626'; return; }
+  if (d.error) {
+    $('vote-status').textContent = d.error;
+    $('vote-status').style.color='#dc2626';
+    // Re-sync state in case voting was closed/reset
+    try { await loadState(); render(); } catch(e) {}
+    return;
+  }
   localStorage.setItem('pcts_voted', '1');
   hideAll('.screen');
   // clear next-show feedback form

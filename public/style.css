@@ -192,7 +192,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:c
   #app{padding-top:42px}
   .hdr-logo{width:30px;height:30px}
   .hdr-name{font-size:.8rem;letter-spacing:0}
-  .hdr-left{padding:.08rem .4rem;gap:.4rem}
+  .hdr-left{padding:.08rem .4rem;gap:.4rem;background:transparent;backdrop-filter:none}
   .hdr-stuco{display:none}
   .hdr-torch{height:22px!important}
   .admin-trigger{width:28px;height:28px}

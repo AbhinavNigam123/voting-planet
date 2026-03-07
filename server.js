@@ -69,11 +69,14 @@ app.get('/api/events', (req, res) => {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
-    Connection: 'keep-alive'
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no'
   });
   res.write('\n');
   sseClients.push(res);
-  req.on('close', () => { sseClients = sseClients.filter(c => c !== res); });
+  // Keep-alive heartbeat every 15s so proxies don't kill the connection
+  const heartbeat = setInterval(() => { try { res.write(': heartbeat\n\n'); } catch(e){} }, 15000);
+  req.on('close', () => { clearInterval(heartbeat); sseClients = sseClients.filter(c => c !== res); });
 });
 
 function parseTime(timeStr) {

@@ -99,26 +99,27 @@ async function enterApp() {
 }
 
 // ─── SSE ────────────────────────────────────────────────
+let _es = null;
 function connectSSE() {
-  const es = new EventSource('/api/events');
-  es.addEventListener('stateUpdate', async e => {
+  if (_es) { _es.close(); _es = null; }
+  _es = new EventSource('/api/events');
+  _es.addEventListener('stateUpdate', async e => {
     appState = JSON.parse(e.data);
-    // Reload performances & superlatives so every client stays fully in sync
-    await Promise.all([loadPerfs(), loadSups()]);
+    try { await Promise.all([loadPerfs(), loadSups()]); } catch(err) { console.warn('SSE resync failed', err); }
     render();
     if (isAdmin) refreshAdminPanel();
   });
-  es.addEventListener('mediaUpdate', async e => {
+  _es.addEventListener('mediaUpdate', async e => {
     const m = JSON.parse(e.data);
     if (!m.deleted) {
       const p = performances.find(x => x.id === m.performanceId);
       if (p) { p.media = p.media || []; p.media.push(m); }
     }
-    await loadPerfs(); // always resync
+    try { await loadPerfs(); } catch(err) {}
     renderMedia();
     if (isAdmin) refreshAdminPanel();
   });
-  es.onerror = () => setTimeout(() => connectSSE(), 3000);
+  _es.onerror = () => { _es.close(); _es = null; setTimeout(connectSSE, 2000); };
 }
 
 async function loadState() { appState = await api('/api/state'); }

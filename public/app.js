@@ -123,6 +123,22 @@ function connectSSE() {
     // Then resync performances/superlatives in background
     Promise.all([loadPerfs(), loadSups()]).then(() => { render(); if (isAdmin) refreshAdminPanel(); }).catch(() => {});
   });
+  _es.addEventListener('reset', () => {
+    // Clear ALL local state; non-admins must re-login
+    localStorage.removeItem('pcts_voted');
+    localStorage.removeItem('pcts_joined');
+    localStorage.removeItem('pcts_did');
+    localStorage.removeItem('pcts_firstName');
+    localStorage.removeItem('pcts_lastName');
+    feedbackDone = {};
+    if (isAdmin) {
+      // Admin stays logged in, just refresh state
+      loadState().then(() => { loadPerfs(); loadSups(); render(); refreshAdminPanel(); });
+    } else {
+      // Force back to login screen
+      location.reload();
+    }
+  });
   _es.addEventListener('mediaUpdate', e => {
     const m = JSON.parse(e.data);
     if (!m.deleted) {

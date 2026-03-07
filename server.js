@@ -427,7 +427,7 @@ app.delete('/api/admin/media/:id', adminAuth, async (req, res) => {
 
 app.post('/api/admin/reset', adminAuth, (_req, res) => {
   saveDB(JSON.parse(JSON.stringify(DEFAULT_DB)));
-  broadcast('stateUpdate', buildPublicState(DEFAULT_DB));
+  broadcast('reset', {});
   res.json({ success: true });
 });
 

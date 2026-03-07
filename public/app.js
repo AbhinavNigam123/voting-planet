@@ -101,12 +101,22 @@ async function enterApp() {
 // ─── SSE ────────────────────────────────────────────────
 function connectSSE() {
   const es = new EventSource('/api/events');
-  es.addEventListener('stateUpdate', e => { appState = JSON.parse(e.data); render(); });
-  es.addEventListener('mediaUpdate', e => {
+  es.addEventListener('stateUpdate', async e => {
+    appState = JSON.parse(e.data);
+    // Reload performances & superlatives so every client stays fully in sync
+    await Promise.all([loadPerfs(), loadSups()]);
+    render();
+    if (isAdmin) refreshAdminPanel();
+  });
+  es.addEventListener('mediaUpdate', async e => {
     const m = JSON.parse(e.data);
-    const p = performances.find(x => x.id === m.performanceId);
-    if (p) { p.media = p.media || []; p.media.push(m); }
+    if (!m.deleted) {
+      const p = performances.find(x => x.id === m.performanceId);
+      if (p) { p.media = p.media || []; p.media.push(m); }
+    }
+    await loadPerfs(); // always resync
     renderMedia();
+    if (isAdmin) refreshAdminPanel();
   });
   es.onerror = () => setTimeout(() => connectSSE(), 3000);
 }

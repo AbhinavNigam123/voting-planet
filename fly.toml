@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for panther-creek-talent-show on 2026-03-07T01:08:53-05:00
+# fly.toml app configuration file generated for panthercreektalentshow on 2026-03-07T01:47:16-05:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'panther-creek-talent-show'
+app = 'panthercreektalentshow'
 primary_region = 'iad'
 
 [build]

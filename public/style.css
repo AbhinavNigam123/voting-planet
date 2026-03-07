@@ -85,7 +85,7 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-
 .perf-badge{display:inline-block;background:linear-gradient(135deg,var(--columbia-p) 0%,var(--white) 100%);color:#01206A;font-size:.8rem;
   font-weight:600;padding:.3rem .9rem;border-radius:6px;margin-bottom:1rem;border:1px solid var(--columbia-p)}
 .perf-title-label{font-size:.75rem;color:var(--g500);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.3rem;text-align:left}
-.perf-title{color:#01206A;font-size:1.5rem;line-height:1.2;margin-bottom:.6rem;font-weight:700;text-align:center;padding-bottom:.8rem;border-bottom:2px solid var(--g300)}
+.perf-title{color:#01206A;font-size:1.8rem;line-height:1.2;margin-bottom:.6rem;font-weight:700;text-align:center;padding-bottom:.8rem;border-bottom:2px solid var(--g300)}
 .perf-sub-label{font-size:.75rem;color:var(--g500);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:1rem;margin-bottom:.3rem;text-align:center}
 .perf-sub{color:#8B0000;font-weight:600;margin-bottom:.8rem;font-size:1rem;text-align:center}
 .perf-bio{color:var(--g600);font-size:.9rem;margin-bottom:.6rem;font-style:italic;padding-left:1rem;border-left:2px solid var(--g300);text-align:left}
@@ -125,7 +125,7 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-
 .vote-card .vc-media img,.vote-card .vc-media video{width:100%;height:100%;object-fit:cover;cursor:pointer}
 .vote-card .vc-media video{background:#000}
 .vote-card .vc-info{flex:1;min-width:0}
-.vote-card .vc-title{font-weight:700;color:#01206A;font-size:1.05rem;margin-bottom:.3rem}
+.vote-card .vc-title{font-weight:700;color:#01206A;font-size:1.25rem;margin-bottom:.3rem}
 .vote-card .vc-name{font-size:.88rem;color:var(--g600);margin-bottom:.6rem}
 .vote-card select{margin-top:.4rem;width:auto;min-width:80px;padding:.5rem .7rem;font-weight:600;background:var(--white);border:2px solid var(--g300);border-radius:6px}
 .vote-card select:focus{border-color:var(--columbia);outline:none}
@@ -185,5 +185,16 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-
   .screen{padding:1rem .8rem}
   .vote-card{flex-direction:column}
   .vote-card .vc-media{width:100%;height:140px;flex:unset}
-  header{padding:.5rem .8rem}
+  header{padding:.15rem .6rem}
+  .hdr-logo{width:30px;height:30px}
+  .hdr-name{font-size:.8rem;letter-spacing:0}
+  .hdr-left{padding:.08rem .4rem;gap:.4rem}
+  .hdr-stuco{display:none}
+  .hdr-torch{height:22px!important}
+  .admin-trigger{width:28px;height:28px}
+  .admin-trigger svg{width:15px;height:15px}
+}
+@media(max-width:360px){
+  .hdr-name{font-size:.7rem}
+  .hdr-logo{width:26px;height:26px}
 }

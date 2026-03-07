@@ -1,0 +1,79 @@
+[
+  {
+    "id": 1,
+    "order": 1,
+    "title": "Fource",
+    "performers": "Fiona Jackson, Anwitha Verma, Shreeyanee Satapathy, & Meredith Valencia",
+    "bio": "",
+    "description": "Dance",
+    "customQuestion": "",
+    "tentativeTime": "7:00",
+    "performerNote": ""
+  },
+  {
+    "id": 2,
+    "order": 2,
+    "title": "Major 2nd",
+    "performers": "Omkar Mohile & Mary Eyuboglu",
+    "bio": "",
+    "description": "Singing/Chorus",
+    "customQuestion": "",
+    "tentativeTime": "8:55",
+    "performerNote": ""
+  },
+  {
+    "id": 3,
+    "order": 3,
+    "title": "K-Pop Dance Club",
+    "performers": "Megan Jeong, Amna Ghias, Shreeyanee Satapathy, Riley Bill, Mufaro Vera, & A’Niiyah Johnson",
+    "bio": "",
+    "description": "Singing/Chorus",
+    "customQuestion": "",
+    "tentativeTime": "",
+    "performerNote": ""
+  },
+  {
+    "id": 4,
+    "order": 4,
+    "title": "Awesome Radical Band",
+    "performers": "kkk",
+    "bio": "",
+    "description": "",
+    "customQuestion": "",
+    "tentativeTime": "9:30",
+    "performerNote": ""
+  },
+  {
+    "id": 5,
+    "order": 5,
+    "title": "Major 2nd",
+    "performers": "",
+    "bio": "",
+    "description": "",
+    "customQuestion": "",
+    "tentativeTime": "7:08",
+    "performerNote": ""
+  },
+  {
+    "id": 6,
+    "order": 6,
+    "title": "K-Pop Dance Club",
+    "performers": "",
+    "bio": "",
+    "description": "",
+    "customQuestion": "",
+    "tentativeTime": "",
+    "performerNote": ""
+  },
+  {
+    "id": 7,
+    "order": 7,
+    "title": "Major 5th",
+    "performers": "",
+    "bio": "",
+    "description": "",
+    "customQuestion": "",
+    "tentativeTime": "",
+    "performerNote": ""
+  }
+]

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Panther Creek Talent Show</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
+</head>
+<body>
+
+<!-- ==================== WELCOME SCREEN ==================== -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <img src="/logo.png" alt="Panther Creek" class="auth-logo" id="panther-logo" onerror="this.style.display='none';document.getElementById('panther-logo-fallback').style.display='block';">
+    <div id="panther-logo-fallback" style="display:none;width:120px;height:120px;margin:0 auto .5rem;background:var(--g200);border-radius:50%"></div>
+    <h1 class="auth-title">Panther Creek<br><span>Talent Show</span></h1>
+    <p class="auth-sub">Vote, leave feedback, and cheer on your classmates!</p>
+    <div id="name-form">
+      <input type="text" id="first-name" class="field" placeholder="First Name" autocomplete="given-name">
+      <input type="text" id="last-name" class="field" placeholder="Last Name" autocomplete="family-name">
+      <button id="join-btn" class="btn btn-primary btn-lg" onclick="joinShow()">
+        🎭 Enter the Show
+      </button>
+    </div>
+    <p id="auth-error" class="err"></p>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="app" class="hidden">
+
+  <!-- Header -->
+  <header>
+    <div class="hdr-left"><img src="/logo.png" alt="PC" class="hdr-logo" onerror="this.style.display='none';"><span class="hdr-name"><span class="hdr-part1">Panther Creek</span> <span class="hdr-part2">Talent Show</span></span></div>
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <img src="/torch.png" alt="Torch" style="height:28px;object-fit:contain">
+      <img src="/stuco.png" alt="StuCo" style="height:28px;object-fit:contain;margin-top:2px;margin-right:-1px">
+      <button id="admin-trigger" class="admin-trigger" onclick="handleAdminTrigger()" title="Admin">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- WAITING screen -->
+  <section id="scr-waiting" class="screen">
+    <div class="center-msg">
+      <div class="big-icon pulse">🎭</div>
+      <h2>Welcome to the Talent Show!</h2>
+      <p>The show is about to begin — stay tuned!</p>
+    </div>
+    <div id="program-list" class="program-list"></div>
+  </section>
+
+  <!-- PERFORMING screen -->
+  <section id="scr-performing" class="screen hidden">
+    <div class="card perf-card">
+      <div class="perf-badge">Performance <b id="perf-num">1</b> of <b id="perf-total">5</b></div>
+      <div class="perf-title-label">Title:</div>
+      <h1 id="perf-title" class="perf-title"></h1>
+      <div class="perf-sub-label">Performers:</div>
+      <h3 id="perf-performers" class="perf-sub"></h3>
+      <p id="perf-bio" class="perf-bio"></p>
+      <div class="perf-desc-label">Performers note:</div>
+      <p id="perf-desc" class="perf-desc"></p>
+      <div id="perf-note" class="perf-note"></div>
+      <div id="perf-media" class="media-grid"></div>
+    </div>
+
+    <!-- Program Modal -->
+    <div id="program-modal" class="overlay hidden" onclick="if(event.target===this) toggleProgramModal()">
+      <div class="modal" style="max-width:500px;max-height:80vh;overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <h3 style="margin:0">Program</h3>
+          <button onclick="toggleProgramModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--g600)">&times;</button>
+        </div>
+        <div id="program-modal-list"></div>
+      </div>
+    </div>
+
+    <!-- Feedback form (toggled by admin) -->
+    <div id="feedback-section" class="card fb-card hidden">
+      <h3><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:inline-block;vertical-align:middle;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Leave Your Feedback</h3>
+      <div id="custom-q-wrap" class="hidden">
+        <label id="custom-q-label" class="fb-label"></label>
+        <textarea id="custom-q-input" class="field" rows="2" placeholder="Your answer…"></textarea>
+      </div>
+      <label class="fb-label">Leave Feedback!</label>
+      <textarea id="feedback-input" class="field" rows="3" placeholder="Share your thoughts…"></textarea>
+      <button class="btn btn-primary" onclick="submitFeedback()">Submit Feedback</button>
+      <p id="fb-status" class="status"></p>
+    </div>
+
+    <div id="fb-done" class="card center-msg hidden">
+      <p><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:inline-block;vertical-align:middle;margin-right:6px;color:#10b981"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Feedback submitted! Enjoy the next performance.</p>
+    </div>
+
+    <button class="btn btn-accent" style="width:100%;margin-top:1rem;box-shadow:0 4px 20px rgba(0,45,98,.15),0 1px 3px rgba(0,0,0,.1)" onclick="toggleProgramModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:inline-block;vertical-align:middle;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>View Program
+    </button>
+  </section>
+
+  <!-- VOTING screen -->
+  <section id="scr-voting" class="screen hidden">
+    <h2 class="sec-title">Vote for Your Favorites</h2>
+    <p class="sec-sub">Rank your top 5 performances (1 = absolute favorite)</p>
+    <div class="vote-progress">
+      <div id="vote-progress-bar" class="vote-progress-bar" style="width:0%"></div>
+    </div>
+    <p id="vote-count" style="text-align:center;color:var(--g600);font-size:.9rem;margin-bottom:1rem">0 of 5 performances ranked</p>
+    <div id="vote-cards"></div>
+
+    <h2 class="sec-title" style="margin-top:2rem">Superlatives</h2>
+    <div id="sup-votes"></div>
+
+    <button class="btn btn-primary btn-lg" style="margin-top:1.5rem" onclick="submitVotes()">Submit All Votes</button>
+    <p id="vote-status" class="status"></p>
+  </section>
+
+  <!-- ALREADY VOTED screen -->
+  <section id="scr-voted" class="screen hidden">
+    <div class="center-msg">
+      <div class="big-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:#10b981"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      <h2>Thank You for Voting!</h2>
+      <p>Your votes have been recorded. Winners will be announced soon!</p>
+    </div>
+
+    <div class="card fb-card" style="margin-top:0">
+      <h3><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:inline-block;vertical-align:middle;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>Help Us Improve Next Year's Show</h3>
+      <label class="fb-label">Leave feedback for next year's talent show!</label>
+      <textarea id="next-feedback" class="field" rows="3" placeholder="What should we keep, change, or add?"></textarea>
+      <label class="fb-label">Say anything you want!</label>
+      <textarea id="next-anything" class="field" rows="2" placeholder="Shoutouts, ideas, or anything else…"></textarea>
+      <button class="btn btn-primary" onclick="submitNextShowFeedback()">Send Feedback</button>
+      <p id="next-fb-status" class="status"></p>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== ADMIN LOGIN MODAL ==================== -->
+<div id="admin-login-modal" class="overlay hidden">
+  <div class="modal">
+    <h3><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:inline-block;vertical-align:middle;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Admin Login</h3>
+    <input type="password" id="admin-pw-input" class="field" placeholder="Enter admin password">
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="loginAdmin()">Login</button>
+      <button class="btn btn-ghost" onclick="hide('admin-login-modal')">Cancel</button>
+    </div>
+    <p id="admin-login-err" class="err"></p>
+  </div>
+</div>
+
+<!-- ==================== ADMIN PANEL ==================== -->
+<div id="admin-panel" class="overlay hidden">
+  <div class="admin-sheet">
+    <div class="admin-hdr">
+      <h2><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:inline-block;vertical-align:middle;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Admin Panel</h2>
+      <button class="btn-x" onclick="hide('admin-panel')">✕</button>
+    </div>
+
+    <!-- Show Control -->
+    <div class="adm-section">
+      <h4>Show Control</h4>
+      <div class="adm-row">
+        <button class="btn btn-sm btn-secondary" onclick="admPrev()">← Prev</button>
+        <span id="adm-perf-label" class="adm-label">1 / 5</span>
+        <button class="btn btn-sm btn-secondary" onclick="admNext()">Next →</button>
+      </div>
+      <div class="adm-row">
+        <button class="btn btn-sm btn-accent" onclick="admToggleFeedback()">Toggle Feedback</button>
+      </div>
+      <div class="adm-row">
+        <button class="btn btn-sm btn-secondary" onclick="admSetPhase('waiting')">Waiting</button>
+        <button class="btn btn-sm btn-secondary" onclick="admSetPhase('performing')">Performing</button>
+        <button class="btn btn-sm btn-primary"   onclick="admOpenVoting()">Open Voting</button>
+      </div>
+    </div>
+
+    <!-- Manage Performances -->
+    <div class="adm-section">
+      <h4>Manage Performances</h4>
+      <div id="adm-perf-list"></div>
+      <button class="btn btn-sm btn-accent" onclick="admAddPerf()" style="margin-top:.5rem">+ Add Performance</button>
+      <div id="adm-perf-form" class="hidden" style="margin-top:1rem;padding:1rem;background:var(--g100);border-radius:8px">
+        <input type="text" id="adm-perf-title" class="field" placeholder="Title">
+        <input type="text" id="adm-perf-performers" class="field" placeholder="Performers">
+        <input type="text" id="adm-perf-time" class="field" placeholder="Tentative Time (e.g., 7:00 PM)">
+        <textarea id="adm-perf-bio" class="field" rows="2" placeholder="Bio"></textarea>
+        <textarea id="adm-perf-desc" class="field" rows="2" placeholder="Description"></textarea>
+        <textarea id="adm-perf-note" class="field" rows="2" placeholder="Performer's Note (for audience)"></textarea>
+        <input type="text" id="adm-perf-q" class="field" placeholder="Custom Question (optional)">
+        <div class="adm-row">
+          <button class="btn btn-sm btn-primary" onclick="admSavePerf()">Save</button>
+          <button class="btn btn-sm btn-secondary" onclick="admCancelPerf()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Media -->
+    <div class="adm-section">
+      <h4>Upload Clip / Image</h4>
+      <select id="adm-media-perf" class="field"></select>
+      <input type="file" id="adm-media-file" class="field" accept="image/*,video/*">
+      <button class="btn btn-sm btn-accent" onclick="admUpload()">Upload</button>
+      <div id="adm-media-list"></div>
+      <p id="upload-status" class="status"></p>
+    </div>
+
+    <!-- Superlatives -->
+    <div class="adm-section">
+      <h4>Superlatives</h4>
+      <div id="adm-sup-list"></div>
+      <div class="adm-row">
+        <input type="text" id="adm-sup-name" class="field" placeholder="New superlative…" style="flex:1">
+        <button class="btn btn-sm btn-accent" onclick="admAddSup()">Add</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="adm-section">
+      <h4>Results</h4>
+      <button class="btn btn-sm btn-primary" onclick="admShowResults()">View Results</button>
+      <div id="adm-results"></div>
+    </div>
+
+    <!-- Reset -->
+    <div class="adm-section">
+      <h4 class="danger-h">Danger Zone</h4>
+      <button class="btn btn-sm btn-danger" onclick="admReset()">Reset All Data</button>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

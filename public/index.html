@@ -15,7 +15,7 @@
     <img src="/logo.png" alt="Panther Creek" class="auth-logo" id="panther-logo" onerror="this.style.display='none';document.getElementById('panther-logo-fallback').style.display='block';">
     <div id="panther-logo-fallback" style="display:none;width:120px;height:120px;margin:0 auto .5rem;background:var(--g200);border-radius:50%"></div>
     <h1 class="auth-title">Panther Creek<br><span>Talent Show</span></h1>
-    <p class="auth-sub">Vote, leave feedback, and cheer on your classmates!</p>
+    <p class="auth-sub">Vote, leave feedback, and cheer on your classmates, friends, or kids!</p>
     <div id="name-form">
       <input type="text" id="first-name" class="field" placeholder="First Name" autocomplete="given-name">
       <input type="text" id="last-name" class="field" placeholder="Last Name" autocomplete="family-name">
@@ -61,8 +61,9 @@
       <div class="perf-sub-label">Performers:</div>
       <h3 id="perf-performers" class="perf-sub"></h3>
       <p id="perf-bio" class="perf-bio"></p>
-      <div class="perf-desc-label">Performers note:</div>
+      <div id="perf-desc-label" class="perf-desc-label">Description:</div>
       <p id="perf-desc" class="perf-desc"></p>
+      <div id="perf-note-label" class="perf-desc-label">Performers Note:</div>
       <div id="perf-note" class="perf-note"></div>
       <div id="perf-media" class="media-grid"></div>
     </div>
@@ -159,7 +160,7 @@
     </div>
 
     <!-- Show Control -->
-    <div class="adm-section">
+    <div class="adm-section" id="adm-sec-control">
       <h4>Show Control</h4>
       <div class="adm-row">
         <button class="btn btn-sm btn-secondary" onclick="admPrev()">← Prev</button>
@@ -177,14 +178,13 @@
     </div>
 
     <!-- Manage Performances -->
-    <div class="adm-section">
+    <div class="adm-section" id="adm-sec-perf">
       <h4>Manage Performances</h4>
       <div id="adm-perf-list"></div>
       <button class="btn btn-sm btn-accent" onclick="admAddPerf()" style="margin-top:.5rem">+ Add Performance</button>
       <div id="adm-perf-form" class="hidden" style="margin-top:1rem;padding:1rem;background:var(--g100);border-radius:8px">
         <input type="text" id="adm-perf-title" class="field" placeholder="Title">
         <input type="text" id="adm-perf-performers" class="field" placeholder="Performers">
-        <input type="text" id="adm-perf-time" class="field" placeholder="Tentative Time (e.g., 7:00 PM)">
         <textarea id="adm-perf-bio" class="field" rows="2" placeholder="Bio"></textarea>
         <textarea id="adm-perf-desc" class="field" rows="2" placeholder="Description"></textarea>
         <textarea id="adm-perf-note" class="field" rows="2" placeholder="Performer's Note (for audience)"></textarea>
@@ -197,7 +197,7 @@
     </div>
 
     <!-- Upload Media -->
-    <div class="adm-section">
+    <div class="adm-section" id="adm-sec-upload">
       <h4>Upload Clip / Image</h4>
       <select id="adm-media-perf" class="field"></select>
       <input type="file" id="adm-media-file" class="field" accept="image/*,video/*">
@@ -207,7 +207,7 @@
     </div>
 
     <!-- Superlatives -->
-    <div class="adm-section">
+    <div class="adm-section" id="adm-sec-sups">
       <h4>Superlatives</h4>
       <div id="adm-sup-list"></div>
       <div class="adm-row">
@@ -217,16 +217,21 @@
     </div>
 
     <!-- Results -->
-    <div class="adm-section">
+    <div class="adm-section" id="adm-sec-results">
       <h4>Results</h4>
       <button class="btn btn-sm btn-primary" onclick="admShowResults()">View Results</button>
+      <button class="btn btn-sm btn-secondary" onclick="admShowFullRankingList()">Full Ranking List</button>
       <div id="adm-results"></div>
     </div>
 
     <!-- Reset -->
     <div class="adm-section">
       <h4 class="danger-h">Danger Zone</h4>
-      <button class="btn btn-sm btn-danger" onclick="admReset()">Reset All Data</button>
+      <p id="adm-nonowner-warning" class="err hidden" style="margin:.4rem 0 0">
+        Another device is the active admin. Only Complete Reset is available here.
+      </p>
+      <button id="adm-reset-basic" class="btn btn-sm btn-danger" onclick="admReset()">Reset All Data</button>
+      <button class="btn btn-sm btn-danger" onclick="admCompleteReset()">Complete Reset</button>
     </div>
   </div>
 </div>

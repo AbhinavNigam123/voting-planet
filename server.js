@@ -9,36 +9,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const INSTANCE_ID = process.env.FLY_MACHINE_ID || `pid-${process.pid}`;
 
-// #region agent log helper
-function debugLog(location, message, data, runId = 'post-fix', hypothesisId = 'H0') {
-  if (typeof fetch !== 'function') return;
-  try {
-    fetch('http://127.0.0.1:7618/ingest/37b3fe14-22e4-416f-bb9a-915f915b133e', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Debug-Session-Id': 'e1889a'
-      },
-      body: JSON.stringify({
-        sessionId: 'e1889a',
-        runId,
-        hypothesisId,
-        location,
-        message,
-        data,
-        timestamp: Date.now()
-      })
-    }).catch(() => {});
-  } catch {
-    // ignore logging failures
-  }
-}
-// #endregion
-
-
-
 // ======================== CONFIG ========================
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'panthershow2026';
+if (!process.env.ADMIN_PASSWORD) {
+  console.error('\n  ADMIN_PASSWORD environment variable is required.\n  Example: set ADMIN_PASSWORD=your-secret && npm start\n');
+  process.exit(1);
+}
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // ======================== TIGRIS S3 ========================
 const USE_S3 = !!(process.env.AWS_ENDPOINT_URL_S3 && process.env.BUCKET_NAME);
@@ -254,22 +230,6 @@ app.post('/api/auth/join', (req, res) => {
   const alreadyVotedByFingerprint = db.devices[deviceId]?.hasVoted === true;
   const alreadyVotedByHw = !!hwFingerprint && db.votedHwFingerprints.includes(hwFingerprint);
 
-  // #region agent log
-  debugLog(
-    'server.js:/api/auth/join',
-    'join evaluated',
-    {
-      hasDeviceRecord: !!db.devices[deviceId],
-      hasCookie,
-      alreadyVotedByCookie,
-      alreadyVotedByFingerprint,
-      alreadyVotedByHw
-    },
-    'pre-investigation',
-    'H-join'
-  );
-  // #endregion
-
   if (!db.devices[deviceId]) {
     db.devices[deviceId] = { hasVoted: alreadyVotedByCookie || alreadyVotedByHw || false, firstName: firstName.trim(), lastName: lastName.trim(), ts: Date.now() };
   } else {
@@ -375,7 +335,6 @@ app.post('/api/vote', (req, res) => {
   }
 
   // Layer 2: Device fingerprint (canvas-based)
-  const hasDeviceRecord = !!db.devices[deviceId];
   if (db.devices[deviceId]?.hasVoted) return res.status(400).json({ error: 'You have already voted on this device.' });
 
   // Layer 3: Hardware fingerprint (no canvas — stable across private browsing)
@@ -387,22 +346,6 @@ app.post('/api/vote', (req, res) => {
   // Layer 4: Name-based duplicate check
   const device = db.devices?.[deviceId];
   const voterNameKey = `${(device?.firstName || '').trim().toLowerCase()}|${(device?.lastName || '').trim().toLowerCase()}`;
-
-  // #region agent log
-  debugLog(
-    'server.js:/api/vote',
-    'vote received',
-    {
-      hasDeviceRecord,
-      hasDeviceName: !!(device && device.firstName),
-      usingUnknownName: !device || !device.firstName,
-      hasHwFingerprint: !!hwFingerprint,
-      hwSeen
-    },
-    'pre-investigation',
-    'H-vote'
-  );
-  // #endregion
   if (voterNameKey !== '|' && db.votes.some(v => v.voterNameKey === voterNameKey)) {
     return res.status(400).json({ error: 'This name has already voted.' });
   }

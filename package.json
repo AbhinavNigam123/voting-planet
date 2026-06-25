@@ -1,10 +1,11 @@
 {
   "name": "panther-creek-talent-show",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "dev:3001": "set PORT=3001&& node server.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1004.0",

@@ -1,11 +1,11 @@
-# Add screenshots here for the README (PNG or JPG).
+# Screenshots for README
 
-Suggested captures from localhost:
-
-1. `01-login.png` — Welcome / name entry screen
-2. `02-program.png` — Waiting screen with program list
-3. `03-performing.png` — Live performance view
-4. `04-voting.png` — Ranked voting screen
-5. `05-admin.png` — Admin panel (show control)
-
-After adding files, they will be embedded in the root README.
+| File | Description |
+|------|-------------|
+| `02-program.png` | Waiting screen — live program list |
+| `03-performing.png` | Live performance view (current act) |
+| `03-performing-feedback.png` | Per-performance feedback form |
+| `04-voting-rankings.png` | Ranked voting — top 5 picks |
+| `04-voting-superlatives.png` | Superlative categories + submit |
+| `05-admin-control.png` | Admin — show control + manage performances |
+| `05-admin-manage.png` | Admin — uploads, superlatives, results, danger zone |

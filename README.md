@@ -1,31 +1,77 @@
 # Talent Show Voting App
 
-Real-time voting, feedback, and show control for live school talent shows. Built and deployed for a ~100-person event in 2026; this repository is the production codebase, adapted for public release.
+I built this to run a live school talent show for about 100 people — audience phones follow an admin-controlled flow (waiting → performing → voting) with ranked votes, superlatives, per-performance feedback, and live results. This is the production codebase I deployed in 2026, cleaned up for anyone who wants to run something similar.
 
-> **Disclaimer:** Not officially affiliated with WCPSS or Panther Creek High School.
+If you're organizing a talent show, assembly vote, or any event where a crowd votes from their phones while one person runs the show, you can fork this repo, edit `performances.json`, start the server, and go. Everything syncs in real time over SSE so every device stays on the same act and phase.
 
-## About this release
+> **Disclaimer:** Not affiliated with WCPSS or Panther Creek High School.
 
-This project was used to run a live talent show end-to-end: audience devices followed the admin-controlled phase (waiting → performing → voting), with ranked votes, superlatives, per-performance feedback, and results.
+## What's in this repo
 
-For the public repo I:
-
-- Removed other performers’ personal data from the sample program (kept **Orange Jasmine** as the real portfolio entry)
-- Added placeholder demo acts (`NAME HERE` / `TYPE HERE`, plus fun examples) so others can fork and customize
-- Required `ADMIN_PASSWORD` via environment variable (no hardcoded secrets in code)
-- Kept a **private local archive** (`private-archive/`, gitignored) with the full show backup on my machine
+The sample program includes one real act from the show I ran (**Orange Jasmine**) plus demo entries and labeled placeholders (`Act or Group Title Here`, etc.) so you can swap in your own lineup. I removed other performers' personal data from the public version. Admin access requires an `ADMIN_PASSWORD` environment variable — no hardcoded secrets in the code.
 
 ## Screenshots
 
-_Screenshots coming soon — capture from localhost and add to `docs/screenshots/`._
+The screens below follow the show flow: program → live performance → feedback → voting → admin.
 
-| | |
-|---|---|
-| Login | _pending_ |
-| Program | _pending_ |
-| Performing | _pending_ |
-| Voting | _pending_ |
-| Admin | _pending_ |
+### Audience — live program (waiting phase)
+
+Before the show starts, every connected device sees the same synced program list. Performances update in real time as the admin edits or reorders acts.
+
+![Waiting screen with the live program list](docs/screenshots/02-program.png)
+
+### Audience — live performance view
+
+During the **Performing** phase, all audience devices follow the admin's current act — performers, description, optional notes, and uploaded media (images or clips).
+
+![Live performance view synced to the current act](docs/screenshots/03-performing.png)
+
+The `1 of 6` badge matches the admin's position in the lineup. When the admin hits Next, every phone updates together.
+
+### Audience — per-performance feedback
+
+While an act is on stage, the admin can open feedback. Audience members answer optional custom questions and leave comments without leaving the performance screen.
+
+![Per-performance feedback form during the show](docs/screenshots/03-performing-feedback.png)
+
+### Audience — ranked voting
+
+When the admin opens voting, audience members rank their **top 5** performances (1 = favorite). Thumbnails come from uploaded media on each act.
+
+![Ranked voting — pick top 5 performances](docs/screenshots/04-voting-rankings.png)
+
+### Audience — superlatives
+
+Below the rankings, voters pick one performer per superlative category (e.g. Most Entertaining, Best Stage Presence). Categories are configurable from the admin panel.
+
+![Superlative picks and submit](docs/screenshots/04-voting-superlatives.png)
+
+One **Submit All Votes** sends rankings and superlatives together. Duplicate votes are blocked by device fingerprint, cookie, and name checks.
+
+### Admin — show control & performance management
+
+The admin panel drives the entire event. **Show Control** advances phases (Waiting → Performing → Open Voting), moves between acts, and toggles feedback — all broadcast instantly to every audience phone.
+
+![Admin panel — show control and performance list](docs/screenshots/05-admin-control.png)
+
+**Manage Performances** supports adding, editing, deleting, and reordering acts without editing JSON by hand.
+
+### Admin — uploads, superlatives, and results
+
+Media uploads (clips/images per act), superlative categories, live results, and reset options for the next run.
+
+![Admin panel — uploads, superlatives, results, and reset](docs/screenshots/05-admin-manage.png)
+
+---
+
+## Run your own show
+
+1. **Install and start** the server with `ADMIN_PASSWORD` set (see [Run locally](#run-locally)).
+2. **Edit the lineup** in `performances.json` — replace the placeholder acts with yours.
+3. **Audience:** open the site on any phone, enter first and last name, and wait on the program screen.
+4. **Admin:** click the gear icon and enter the admin password. The first device to log in becomes the **owner** with full panel access.
+5. **During the show:** use Prev/Next and phase buttons; audience screens follow automatically.
+6. **Voting:** open voting from admin; audience rank performances and pick superlatives, then view results from the admin panel.
 
 ## Features
 
@@ -33,10 +79,10 @@ _Screenshots coming soon — capture from localhost and add to `docs/screenshots
 
 - Join with first/last name and device fingerprint
 - Live program list with intermission indicator
-- Synced performance view (follows admin “Next” / phase changes)
+- Synced performance view (follows admin Next / phase changes)
 - Per-performance feedback
 - Ranked voting (top 5) + superlatives
-- “Already voted” state with optional next-show feedback
+- "Already voted" state with optional next-show feedback
 
 **Admin**
 
@@ -62,7 +108,7 @@ _Screenshots coming soon — capture from localhost and add to `docs/screenshots
 - **Storage:** JSON files (`data.json`, `performances.json`); optional AWS S3-compatible (Tigris) for uploads
 - **Deploy:** Fly.io (single machine + persistent volume)
 
-## Architecture (brief)
+## Architecture
 
 ```mermaid
 flowchart TB
@@ -81,7 +127,7 @@ flowchart TB
   API -->|broadcastSync| SSE
 ```
 
-Admin actions mutate the DB, bump a revision timestamp, and push an atomic `sync` payload to all connected clients.
+Admin actions update the database, bump a revision timestamp, and push an atomic `sync` payload to all connected clients.
 
 ## Run locally
 
@@ -118,13 +164,13 @@ Sample performances are in `performances.json`. Runtime state is written to `dat
 
 Scale to zero when not in use: `fly scale count 0 -a your-app`
 
-## What I'd improve in retrospect
+## What I'd improve next
 
-- Voting edge cases: occasional false “already voted” from hardware fingerprint collisions at a shared venue
+- Voting edge cases: occasional false "already voted" from hardware fingerprint collisions at a shared venue
 - `Unknown` voter names when a vote arrives without a matching device join record
 - Stronger admin session handling without relying on a single device owner
 - Automated tests for sync revision logic and vote deduplication
-- UI polish (layout, mobile refinements) — intentionally deferred for now
+- UI polish (layout, mobile refinements)
 
 ## License
 

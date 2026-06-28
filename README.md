@@ -12,7 +12,13 @@ The sample program includes one real act from the show I ran (**Orange Jasmine**
 
 ## Screenshots
 
-The screens below follow the show flow: program → live performance → feedback → voting → admin.
+The screens below follow the show flow: join → program → live performance → feedback → voting → admin.
+
+### Audience — join the show
+
+Audience members enter their first and last name to join. Each device gets a fingerprint so votes and feedback can be tied to one person without accounts or logins.
+
+![Welcome screen — enter name to join](docs/screenshots/01-login.png)
 
 ### Audience — live program (waiting phase)
 

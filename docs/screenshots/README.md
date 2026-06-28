@@ -2,6 +2,7 @@
 
 | File | Description |
 |------|-------------|
+| `01-login.png` | Welcome screen — enter name to join |
 | `02-program.png` | Waiting screen — live program list |
 | `03-performing.png` | Live performance view (current act) |
 | `03-performing-feedback.png` | Per-performance feedback form |

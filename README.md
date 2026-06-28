@@ -1,8 +1,8 @@
 # Talent Show Voting App
 
-I built this to run a live school talent show for about 100 people — audience phones follow an admin-controlled flow (waiting → performing → voting) with ranked votes, superlatives, per-performance feedback, and live results. This is the production codebase I deployed in 2026, cleaned up for anyone who wants to run something similar.
+I built this to run a live school talent show for about 200 people — audience phones follow an admin-controlled flow (waiting → performing → voting) with ranked votes, superlatives, per-performance feedback, and live results. This is the production codebase I deployed for my school's talent show that I also organized on March 12th, 2026, cleaned up for anyone who wants to run something similar (plus my GitHub is rather empty).
 
-If you're organizing a talent show, assembly vote, or any event where a crowd votes from their phones while one person runs the show, you can fork this repo, edit `performances.json`, start the server, and go. Everything syncs in real time over SSE so every device stays on the same act and phase.
+If you're organizing a talent show, assembly vote, or any event where a crowd votes from their phones while one person runs the show, you can fork this repo, edit `performances.json`, start the server, and go. Everything syncs in real time over SSE so every device stays on the same act and phase. I deployed this domain and had people scan a QR code upon entry and on their programs.
 
 > **Disclaimer:** Not affiliated with WCPSS or Panther Creek High School.
 
